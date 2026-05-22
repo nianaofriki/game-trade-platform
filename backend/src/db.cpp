@@ -1,7 +1,7 @@
 #include "db.h"
 #include <iostream>
 
-// 打开数据库文件
+//打开数据库文件
 Database::Database(const std::string& dbPath){
     int rc=sqlite3_open(dbPath.c_str(),&db_);
     if(rc!=SQLITE_OK){
@@ -10,7 +10,7 @@ Database::Database(const std::string& dbPath){
     }
 }
 
-// 关闭数据库
+//关闭数据库
 Database::~Database(){
     if(db_) sqlite3_close(db_);
 }
@@ -59,7 +59,6 @@ bool Database::initTables(){
 }
 
 //====================用户操作====================
-//插入新用户
 bool Database::createUser(const std::string& username,const std::string& passwordHash,
                           const std::string& salt,const std::string& nickname){
     const char* sql="INSERT INTO users (username,password_hash,salt,balance,nickname) VALUES (?,?,?,0,?)";
@@ -74,7 +73,6 @@ bool Database::createUser(const std::string& username,const std::string& passwor
     return rc==SQLITE_DONE;
 }
 
-//根据用户名查询用户
 User Database::getUserByUsername(const std::string& username){
     User user={0};
     const char* sql="SELECT id,username,password_hash,salt,balance,nickname FROM users WHERE username=?";
@@ -93,7 +91,6 @@ User Database::getUserByUsername(const std::string& username){
     return user;
 }
 
-//根据用户ID查询用户
 User Database::getUserById(int userId){
     User user={0};
     const char* sql="SELECT id,username,password_hash,salt,balance,nickname FROM users WHERE id=?";
@@ -112,7 +109,6 @@ User Database::getUserById(int userId){
     return user;
 }
 
-//更新用户余额
 bool Database::updateBalance(int userId,int newBalance){
     const char* sql="UPDATE users SET balance=? WHERE id=?";
     sqlite3_stmt* stmt;
@@ -125,7 +121,6 @@ bool Database::updateBalance(int userId,int newBalance){
 }
 
 //====================商品操作====================
-//发布商品，返回新商品ID
 int Database::createGoods(int sellerId,const std::string& title,
                           const std::string& description,int price){
     const char* sql="INSERT INTO goods (seller_id,title,description,price) VALUES (?,?,?,?)";
@@ -140,7 +135,6 @@ int Database::createGoods(int sellerId,const std::string& title,
     return (int)sqlite3_last_insert_rowid(db_);
 }
 
-//根据商品ID查详情，联表查出卖家昵称
 Goods Database::getGoodsById(int goodsId){
     Goods goods={0};
     const char* sql=R"(
@@ -155,17 +149,16 @@ Goods Database::getGoodsById(int goodsId){
         goods.id=sqlite3_column_int(stmt,0);
         goods.sellerId=sqlite3_column_int(stmt,1);
         goods.title=reinterpret_cast<const char*>(sqlite3_column_text(stmt,2));
-        goods.description=reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)?:"");
+        goods.description=sqlite3_column_text(stmt,3)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)):"";
         goods.price=sqlite3_column_int(stmt,4);
         goods.status=reinterpret_cast<const char*>(sqlite3_column_text(stmt,5));
-        goods.createdAt=reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)?:"");
-        goods.sellerNickname=reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)?:"");
+        goods.createdAt=sqlite3_column_text(stmt,6)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)):"";
+        goods.sellerNickname=sqlite3_column_text(stmt,7)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)):"";
     }
     sqlite3_finalize(stmt);
     return goods;
 }
 
-//获取所有在售商品
 std::vector<Goods> Database::getOnSaleGoods(){
     std::vector<Goods> list;
     const char* sql=R"(
@@ -180,18 +173,17 @@ std::vector<Goods> Database::getOnSaleGoods(){
         goods.id=sqlite3_column_int(stmt,0);
         goods.sellerId=sqlite3_column_int(stmt,1);
         goods.title=reinterpret_cast<const char*>(sqlite3_column_text(stmt,2));
-        goods.description=reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)?:"");
+        goods.description=sqlite3_column_text(stmt,3)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)):"";
         goods.price=sqlite3_column_int(stmt,4);
         goods.status=reinterpret_cast<const char*>(sqlite3_column_text(stmt,5));
-        goods.createdAt=reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)?:"");
-        goods.sellerNickname=reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)?:"");
+        goods.createdAt=sqlite3_column_text(stmt,6)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)):"";
+        goods.sellerNickname=sqlite3_column_text(stmt,7)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)):"";
         list.push_back(goods);
     }
     sqlite3_finalize(stmt);
     return list;
 }
 
-//获取某用户发布的商品
 std::vector<Goods> Database::getUserGoods(int sellerId){
     std::vector<Goods> list;
     const char* sql=R"(
@@ -207,18 +199,17 @@ std::vector<Goods> Database::getUserGoods(int sellerId){
         goods.id=sqlite3_column_int(stmt,0);
         goods.sellerId=sqlite3_column_int(stmt,1);
         goods.title=reinterpret_cast<const char*>(sqlite3_column_text(stmt,2));
-        goods.description=reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)?:"");
+        goods.description=sqlite3_column_text(stmt,3)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,3)):"";
         goods.price=sqlite3_column_int(stmt,4);
         goods.status=reinterpret_cast<const char*>(sqlite3_column_text(stmt,5));
-        goods.createdAt=reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)?:"");
-        goods.sellerNickname=reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)?:"");
+        goods.createdAt=sqlite3_column_text(stmt,6)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,6)):"";
+        goods.sellerNickname=sqlite3_column_text(stmt,7)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,7)):"";
         list.push_back(goods);
     }
     sqlite3_finalize(stmt);
     return list;
 }
 
-//更新商品状态
 bool Database::updateGoodsStatus(int goodsId,const std::string& status){
     const char* sql="UPDATE goods SET status=? WHERE id=?";
     sqlite3_stmt* stmt;
@@ -230,7 +221,6 @@ bool Database::updateGoodsStatus(int goodsId,const std::string& status){
     return rc==SQLITE_DONE;
 }
 
-//更新商品信息
 bool Database::updateGoods(int goodsId,const std::string& title,
                            const std::string& description,int price){
     const char* sql="UPDATE goods SET title=?,description=?,price=? WHERE id=?";
@@ -245,7 +235,6 @@ bool Database::updateGoods(int goodsId,const std::string& title,
     return rc==SQLITE_DONE;
 }
 
-//删除商品
 bool Database::deleteGoods(int goodsId){
     const char* sql="DELETE FROM goods WHERE id=?";
     sqlite3_stmt* stmt;
@@ -257,7 +246,6 @@ bool Database::deleteGoods(int goodsId){
 }
 
 //====================交易操作====================
-//创建交易记录，返回交易ID
 int Database::createTransaction(int buyerId,int sellerId,int goodsId,int amount){
     const char* sql="INSERT INTO transactions (buyer_id,seller_id,goods_id,amount) VALUES (?,?,?,?)";
     sqlite3_stmt* stmt;
@@ -271,7 +259,6 @@ int Database::createTransaction(int buyerId,int sellerId,int goodsId,int amount)
     return (int)sqlite3_last_insert_rowid(db_);
 }
 
-//查询某用户的所有交易记录（作为买家或卖家）
 std::vector<Transaction> Database::getUserTransactions(int userId){
     std::vector<Transaction> list;
     const char* sql=R"(
@@ -291,7 +278,7 @@ std::vector<Transaction> Database::getUserTransactions(int userId){
         t.sellerId=sqlite3_column_int(stmt,2);
         t.goodsId=sqlite3_column_int(stmt,3);
         t.amount=sqlite3_column_int(stmt,4);
-        t.createdAt=reinterpret_cast<const char*>(sqlite3_column_text(stmt,5)?:"");
+        t.createdAt=sqlite3_column_text(stmt,5)?reinterpret_cast<const char*>(sqlite3_column_text(stmt,5)):"";
         list.push_back(t);
     }
     sqlite3_finalize(stmt);

@@ -48,15 +48,15 @@ public:
     int createGoods(int sellerId, const std::string& title,
                     const std::string& description, int price);
     Goods getGoodsById(int goodsId);
-    std::vector<<Goods> getOnSaleGoods();
-    std::vector<<Goods> getUserGoods(int sellerId);
+    std::vector<Goods> getOnSaleGoods();
+    std::vector<Goods> getUserGoods(int sellerId);
     bool updateGoodsStatus(int goodsId, const std::string& status);
     bool updateGoods(int goodsId, const std::string& title,
                      const std::string& description, int price);
     bool deleteGoods(int goodsId);
 
     int createTransaction(int buyerId, int sellerId, int goodsId, int amount);
-    std::vector<<Transaction> getUserTransactions(int userId);
+    std::vector<Transaction> getUserTransactions(int userId);
 
 private:
     sqlite3* db_;
